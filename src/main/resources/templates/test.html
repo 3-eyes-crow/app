@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>test</title>
+    <script type="text/javascript" th:src="@{jquery-easyui-1.5.5.1/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{jquery-easyui-1.5.5.1/jquery.easyui.min.js}"></script>
+    <script type="text/javascript" th:src="@{jquery-easyui-1.5.5.1/locale/easyui-lang-zh_CN.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{jquery-easyui-1.5.5.1/themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{jquery-easyui-1.5.5.1/themes/icon.css}"/>
+    <script>
+        var url
+
+        function newUser() {
+            $('#dlg').dialog('open').dialog('setTitle', 'New User')
+            $('#fm').form('clear')
+            url = 'saveUser'
+        }
+
+        function saveUser() {
+            $('#fm').form('submit', {
+                url: url,
+                onSubmit: function () {
+                    return $(this).form('validate');
+                },
+                success: function (result) {
+                    var result = eval('(' + result + ')')
+                    if (result.success) {
+                        $('#dlg').dialog('close')
+                        $('#dg').datagrid('reload')
+                    } else {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: result.msg
+                        })
+                    }
+
+                }
+            })
+        }
+
+        function editUser() {
+            var row = $('#dg').datagrid('getSelected')
+            if (row) {
+                $('#dlg').dialog('open').dialog('setTitle', 'Edit User')
+                $('#fm').form('load', row)
+                url = 'updateUser?id=' + row.id;
+            }
+        }
+
+        function destroyUser() {
+            var row = $('#dg').datagrid('getSelected')
+            if (row) {
+                $.messager.confirm('Confirm', 'Are you sure you want to remove this user?', function (r) {
+                    if (r) {
+                        $.post('deleteUser', {id: row.id}, function (result) {
+                            if (result.success) {
+                                $('#dg').datagrid('reload')
+                            } else {
+                                $.messager.show({
+                                    title: 'Error',
+                                    msg: result.msg
+                                })
+                            }
+                        }, 'json')
+                    }
+                })
+            }
+        }
+    </script>
+</head>
+<body>
+<h2>Basic CRUD Application</h2>
+<div class="demo-info" style="margin-bottom: 10px">
+    <div>Click the buttons on datagrid toolbar to do crud actions.</div>
+</div>
+
+<table id="dg" title="MyUsers" class="easyui-datagrid" style="width: 550px;height: 250px"
+       url="list"
+       toolbar="#toolbar"
+       rownumbers="true"
+       pagination="true"
+       fitColumns="true"
+       singleSelect="true">
+    <thead>
+    <tr>
+        <th field="firstName" width="50">First Name</th>
+        <th field="lastName" width="50">Last Name</th>
+        <th field="phone" width="50">Phone</th>
+        <th field="email" width="50">Email</th>
+    </tr>
+    </thead>
+</table>
+<div id="toolbar">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newUser()">New User</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editUser()">Edit User</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="destroyUser()">Remove User</a>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width:400px;height: 280px; padding: 10px 20px"
+     closed="true" buttons="#dlg-buttons">
+    <div class="ftitle">User Infomation</div>
+    <form id="fm" method="post">
+        <div class="fitem">
+            <label>First Name:</label>
+            <input name="firstName" class="easyui-validatebox" required="true"/>
+        </div>
+        <div class="fitem">
+            <label>Last Name:</label>
+            <input name="lastName" class="easyui-validatebox" required/>
+        </div>
+        <div class="fitem">
+            <label>Phone:</label>
+            <input name="phone"/>
+        </div>
+        <div class="fitem">
+            <span>Email:</span>
+            <input name="email" class="easyui-validatebox" validType="email"/>
+        </div>
+    </form>
+</div>
+
+<div id="dlg-buttons">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveUser()">Save</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-cancel"
+       onclick="javascript:$('#dlg').dialog('close')">Cancel</a>
+</div>
+</body>
+</html>
